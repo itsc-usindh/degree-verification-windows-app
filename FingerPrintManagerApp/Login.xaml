@@ -1,0 +1,55 @@
+﻿<Window x:Class="FingerPrintManagerApp.Login"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FingerPrintManagerApp"
+        mc:Ignorable="d"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        WindowStartupLocation="CenterScreen"
+        Title="Login" Height="650" Width="400" Background="Transparent">
+    <Border BorderThickness="1" BorderBrush="#57b09c" CornerRadius="30" Background="#ffffff">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="25"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="25"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <Image Source="/logo.png" Width="90" Margin="0,0,0,20"/>
+            <TextBlock Text="Annual Enquiry Biometric System" HorizontalAlignment="Center"/>
+            <TextBlock Text="Login" Foreground="#57b09c" HorizontalAlignment="Center" FontSize="30" Margin="0,20,0,30"/>
+
+            <TextBlock Text="Username" Foreground="#777" Margin="5,0,5,5"/>
+            <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
+                <TextBox BorderThickness="0" x:Name="UsernameText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
+            </Border>
+            
+            <TextBlock Text="Password" Foreground="#777" Margin="5,20,5,5"/>
+            <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
+                <PasswordBox BorderThickness="0" x:Name="PasswordText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
+            </Border>
+
+            <TextBlock Text="An error occured" x:Name="ErrorTxt" Foreground="#FFEF8989" Margin="5" Visibility="Hidden"/>
+
+            <Border Grid.Row="6" Grid.ColumnSpan="5" Background="#57b09c" VerticalAlignment="Top" Margin="0,20,0,10" Height="45" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
+                        MouseDown="LoginButton_Click">
+                <TextBlock x:Name="LoginButn" Text="Log in" Foreground="#fff" FontWeight="DemiBold"
+                            Background="Transparent"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <Border Grid.Row="6" Grid.ColumnSpan="5" Background="#CCCCCC" VerticalAlignment="Top" Margin="0,0,0,10" Height="45" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
+                        MouseDown="CancelButton_Click">
+                <TextBlock x:Name="CancelBtn" Text="Cancel" Foreground="#fff" FontWeight="DemiBold"
+                            Background="Transparent"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+
+            <ProgressBar Grid.Row="0" Grid.ColumnSpan="5" Background="#fff" Height="5" x:Name="ProgressBar" IsIndeterminate="True" BorderThickness="0" VerticalAlignment="Top" Foreground="#57b09c" Visibility="Hidden"/>
+
+        </StackPanel>
+    </Grid>
+    </Border>
+</Window>

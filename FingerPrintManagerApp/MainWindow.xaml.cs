@@ -6,6 +6,12 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Windows.Media;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Net;
+using Brush = System.Windows.Media.Brush;
+using System.Windows.Input;
 
 namespace FingerPrintManagerApp
 {
@@ -21,8 +27,125 @@ namespace FingerPrintManagerApp
         public MainWindow()
         {
             InitializeComponent();
+            mainWindow.Closing+=MainWindow_Closing;
+        }
+
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (videoSource != null)
+            {
+                videoSource.NewFrame -= new NewFrameEventHandler(Video_NewFrame);
+                videoSource.SignalToStop();
+            }
+        }
+
+        private void ConnectDevices()
+        {
             InitializeFingerprintDevice();
             StartWebcam();
+        }
+        private void ShowStatusBlock(bool isSuccess, string statusMsg)
+        {
+            string color = isSuccess ? "#79ba55" : "#d06a6a";
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                StatusBlock.Visibility = Visibility.Visible;
+                StatusBlock.BorderBrush = (Brush)new BrushConverter().ConvertFromString(color);
+                StatusLabel.Text = statusMsg;
+            });
+
+            Task.Run(() =>
+            {
+                Thread.Sleep(3000);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    StatusBlock.Visibility = Visibility.Collapsed;
+                });
+            });
+        }
+        private void ProgressBarVisibilty(bool visible = true)
+        {
+            Task.Run(() =>
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ProgressBar.Visibility = visible ? Visibility.Visible : Visibility.Hidden;
+                });
+            });
+        }
+        private void EnterPress_Handler(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) SearchBtn_Click(sender, e);
+        }
+        private void SelfRadioBtn_Checked(object s, EventArgs e)
+        {
+            if (AuthField1 != null)
+                AuthField1.Visibility = Visibility.Collapsed;
+            if (AuthField2 != null)
+                AuthField2.Visibility = Visibility.Collapsed;
+            if (AuthField3 != null)
+                AuthField3.Visibility = Visibility.Collapsed;
+            if (AuthField4 != null)
+                AuthField4.Visibility = Visibility.Collapsed;
+        }
+        private void AuthRadioBtn_Checked(object s, EventArgs e)
+        {
+            AuthField1.Visibility = Visibility.Visible;
+            AuthField2.Visibility = Visibility.Visible;
+            AuthField3.Visibility = Visibility.Visible;
+            AuthField4.Visibility = Visibility.Visible;
+        }
+        private void SearchBtn_Click(object o, EventArgs e)
+        {
+            try
+            {
+                ProgressBarVisibilty(true);
+                if (String.IsNullOrWhiteSpace(SearchText.Text)) throw new Exception("Enter a valid number in search field");
+                string searchType = "CHALLAN_NO";
+                string searchText = SearchText.Text;
+
+                if ((bool)CnicNoRadio.IsChecked) searchType = CnicNoRadio.Content.ToString();
+                if ((bool)BookingIdRadio.IsChecked) searchType = BookingIdRadio.Content.ToString();
+
+                Task.Factory.StartNew(() =>
+                {
+                    try
+                    {
+                        string apiResponse = PostWithWebRequest("https://annual.usindh.edu.pk/api/enquiry/getChallan", JsonConvert.SerializeObject(new { challan_no = searchText, search_by = searchType }));
+
+                        if (apiResponse == null) throw new Exception("No records found");
+
+                        ChallanModel model = JsonConvert.DeserializeObject<ChallanModel>(apiResponse);
+
+                        if (model == null) throw new Exception("No records found");
+
+                        if (model.BookingDetail == null) throw new Exception("No booking details found");
+
+                        if (model.BookingDetail.DeliveryDate > DateTime.Now) throw new Exception("Please wait till: " + model.BookingDetail.DeliveryDate.ToShortDateString());
+
+                        Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            ChallanInformation.Text = "Name:\t\t"+model.ChallanRec.Name  +
+                                "\r\nS/o:\t\t" + model.ChallanRec.Fname +
+                                "\r\nNIC:\t\t" + model.ChallanRec.CnicNo +
+                                "\r\nDelivery Date:\t" +model.BookingDetail.DeliveryDate.ToLongDateString();
+                        }));
+                        ConnectDevices();
+                        ProgressBarVisibilty(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        ShowStatusBlock(false, ex.Message);
+                        ProgressBarVisibilty(false);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                ShowStatusBlock(false, ex.Message);
+                ProgressBarVisibilty(false);
+            }
         }
 
         #region Fingerprint Code
@@ -38,12 +161,13 @@ namespace FingerPrintManagerApp
         }
         async private Task CaptureFingerprint()
         {
+            string statusMsg = "";
+            bool isSuccess = true;
             await Task.Run(() =>
             {
-                string status = "";
                 BSPError err;
                 BSPInitInfo initInfo = new BSPInitInfo();
-
+                InitializeFingerprintDevice();
                 err = m_SecuBSP.GetInitInfo(initInfo);
 
                 m_SecuBSP.DeviceID = 0x00FF;  // Auto-detect device
@@ -53,7 +177,11 @@ namespace FingerPrintManagerApp
                 if (err == BSPError.ERROR_NONE)
                 {
                     m_DeviceOpened = true;
-
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CaptureBtn.Text = "Connected";
+                        ConnectBubble.Background = (Brush)new BrushConverter().ConvertFromString("#79ba55");
+                    });
                     m_SecuBSP.EnableAuditData = true;
                     m_SecuBSP.SetFIRFormat(FIRFormat.STANDARDPRO);
 
@@ -65,7 +193,7 @@ namespace FingerPrintManagerApp
                     {
                         string capturedFingerprintData = m_SecuBSP.AuditFIRTextData;
 
-                        status = "Fingerprint captured successfully!";
+                        statusMsg = "Fingerprint captured successfully!";
 
                         err = m_SecuBSP.ExportAuditData(capturedFingerprintData);
                         string firForDb = m_SecuBSP.FIRTextData;
@@ -79,22 +207,35 @@ namespace FingerPrintManagerApp
 
                         // Process or store capturedFingerprintData as needed
                         Console.WriteLine(capturedFingerprintData);
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CaptureBtn.Text = "  Connect";
+                            ConnectBubble.Background = (Brush)new BrushConverter().ConvertFromString("#CCCCCC");
+                        });
                     }
                     else
                     {
-                        status = "Error capturing fingerprint: " + err.ToString();
+                        statusMsg = "Error capturing fingerprint: " + err.ToString();
+                        isSuccess = false;
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            CaptureBtn.Text = "  Connect";
+                            ConnectBubble.Background = (Brush)new BrushConverter().ConvertFromString("#CCCCCC");
+                        });
                     }
                 }
                 else
                 {
-                    status = "Error opening device. Please make sure the device is conntect. Error#: " + err.ToString();
+                    statusMsg = "Error opening device. Please make sure the device is conntect. Error#: " + err.ToString();
+                    isSuccess = false;
                 }
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    StatusLabel.Content = status;
+                    ShowStatusBlock(isSuccess, statusMsg);
                 });
             });
             this.scanStatus.Visibility = Visibility.Hidden;
+            ShowStatusBlock(isSuccess, statusMsg);
         }
         private byte[] ConvertHexStringToBytes(FINGER_DATA_STRUCT[] data)
         {
@@ -121,31 +262,38 @@ namespace FingerPrintManagerApp
         /// <summary>
         /// Web Cam
         /// </summary>
+        /// 
 
         private void StartWebcam()
         {
-            FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
+            FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
             if (videoDevices.Count > 0)
             {
                 videoSource = new VideoCaptureDevice(videoDevices[0].MonikerString);
                 videoSource.NewFrame += new NewFrameEventHandler(Video_NewFrame);
                 videoSource.Start();
+                ShowStatusBlock(true, "Camera is connected successfully");
+
             }
             else
             {
-                MessageBox.Show("No webcam detected.");
+                ShowStatusBlock(false, "No webcam detected.");
             }
         }
+
 
         private void Video_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
             Bitmap frame = (Bitmap)eventArgs.Frame.Clone();
             BitmapImage bitmapImage = BitmapToImageSource(frame);
-
             Application.Current.Dispatcher.Invoke(() =>
             {
-                WebcamImage.Source = bitmapImage;
+                try
+                {
+                    WebcamImage.Source = bitmapImage;
+                }
+                catch { }
             });
         }
 
@@ -173,8 +321,28 @@ namespace FingerPrintManagerApp
                 //SaveImage((BitmapImage)WebcamImage.Source);
                 byte[] imageBytes = SaveImageAsBytes();
 
-                StoreImageInDatabase(imageBytes);
-                MessageBox.Show("Image Captured!");
+                StoreImageInDatabase(imageBytes, "REVEIVER_PHOTO");
+                ShowStatusBlock(true, "Image Captured!");
+            }
+        }
+        private void CaptureAuthCnicButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebcamImage.Source != null)
+            {
+                byte[] imageBytes = SaveImageAsBytes();
+
+                StoreImageInDatabase(imageBytes, "AUTH_CNIC_PIC");
+                ShowStatusBlock(true, "CNIC Captured!");
+            }
+        }
+        private void CaptureAuthLetterButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebcamImage.Source != null)
+            {
+                byte[] imageBytes = SaveImageAsBytes();
+
+                StoreImageInDatabase(imageBytes, "AUTH_LATTER_PIC");
+                ShowStatusBlock(true, "Auth letter Captured!");
             }
         }
 
@@ -208,8 +376,11 @@ namespace FingerPrintManagerApp
             return null;
         }
 
-        private void StoreImageInDatabase(byte[] imageBytes)
+        private void StoreImageInDatabase(byte[] imageBytes, string imageFor) // 1.REVEIVER_PHOTO 2.AUTH_CNIC_PIC 3.AUTH_LATTER_PIC
         {
+            if (imageFor == "AUTH_CNIC_PIC") AuthNicPic.Source = WebcamImage.Source.Clone();
+            else if (imageFor == "AUTH_LATTER_PIC") AuthLetterPic.Source = WebcamImage.Source.Clone();
+            else if (imageFor == "REVEIVER_PHOTO") ReceiverPic.Source = WebcamImage.Source.Clone();
             // Example method to store image bytes in the database
             // You will need to adjust the connection string and the table/column names
         }
@@ -224,6 +395,43 @@ namespace FingerPrintManagerApp
                 videoSource.SignalToStop();
             }
             base.OnClosed(e);
+        }
+        #endregion
+
+        #region API Service
+        private static readonly HttpClient client = new HttpClient();
+
+        public string PostWithWebRequest(string url, string jsonPayload)
+        {
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = "POST";
+                request.ContentType = "application/json";
+
+                // Write JSON data to request body
+                using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+                {
+                    streamWriter.Write(jsonPayload);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
+
+                // Get response
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                using (var streamReader = new StreamReader(response.GetResponseStream()))
+                {
+                    string result = streamReader.ReadToEnd();
+                    return result;
+                }
+            }
+            catch (WebException ex)
+            {
+                // Capture and log any issues
+                ShowStatusBlock(false, $"Unable to fetch data (Retry): {ex.Message}");
+                Console.WriteLine($"WebRequest error: {ex.Message}");
+                return null;
+            }
         }
         #endregion
     }
