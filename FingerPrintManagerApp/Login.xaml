@@ -24,12 +24,12 @@
 
             <TextBlock Text="Username" Foreground="#777" Margin="5,0,5,5"/>
             <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
-                <TextBox BorderThickness="0" x:Name="UsernameText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
+                <TextBox BorderThickness="0" Text="4130340105303" x:Name="UsernameText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
             </Border>
             
             <TextBlock Text="Password" Foreground="#777" Margin="5,20,5,5"/>
             <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
-                <PasswordBox BorderThickness="0" x:Name="PasswordText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
+                    <PasswordBox BorderThickness="0" Password="84556636" x:Name="PasswordText" Background="Transparent" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="10,0" Height="40" KeyDown="EnterPress_Handler"/>
             </Border>
 
             <TextBlock Text="An error occured" x:Name="ErrorTxt" Foreground="#FFEF8989" Margin="5" Visibility="Hidden"/>
@@ -47,7 +47,7 @@
                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
 
-            <ProgressBar Grid.Row="0" Grid.ColumnSpan="5" Background="#fff" Height="5" x:Name="ProgressBar" IsIndeterminate="True" BorderThickness="0" VerticalAlignment="Top" Foreground="#57b09c" Visibility="Hidden"/>
+            <ProgressBar Grid.Row="0" Grid.ColumnSpan="5" Background="#fff" Height="5" x:Name="ProgressBarLogin" IsIndeterminate="True" BorderThickness="0" VerticalAlignment="Top" Foreground="#57b09c" Visibility="Hidden"/>
 
         </StackPanel>
     </Grid>

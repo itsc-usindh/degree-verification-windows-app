@@ -8,8 +8,7 @@
         Background="Transparent"
         x:Name="mainWindow"
          Title="Degree Receiving - Biometric Record Management" Height="750" Width="1000" MinHeight="750" MinWidth="1000" WindowStartupLocation="CenterScreen">
-    
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+
     <Border CornerRadius="20" Background="#f6f6f6">
         <Grid>
             <Grid.ColumnDefinitions>
@@ -19,189 +18,72 @@
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="#ffffff" BorderThickness="0,0,1,0" BorderBrush="#c3c3c3">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="15"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="15"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
+                    <Border Grid.Row="0" Padding="5">
+                        <Image Source="/logo.png" />
+                    </Border>
+
+                    <Grid Grid.Row="2" VerticalAlignment="Top">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="15"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Padding="8" Opacity="0.5" CornerRadius="8" Cursor="Hand" MouseDown="FormButn_Handler" Margin="5" x:Name="FormPageBtn">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#eee" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Image Source="/form.png" />
+                        </Border>
+                        <Border Grid.Row="2" Padding="8" Opacity="0.5" CornerRadius="8" Cursor="Hand" MouseDown="ListButn_Handler" Margin="5" x:Name="ListPageBtn">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#eee" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Image Source="/list.png" />
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="4" Padding="10" Margin="5" Opacity="0.5" CornerRadius="8" Cursor="Hand" MouseDown="LogoutButn_Handler" x:Name="LogoutBtn">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#eee" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Image Source="/logout.jpg" />
+                    </Border>
+                </Grid>
             </Border>
 
             <Border Grid.Column="2" Background="#ffffff" BorderThickness="1,0,0,0" BorderBrush="#c3c3c3" Padding="0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="15"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="15"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="15"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="80"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="15"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="15"/>
-                        <RowDefinition Height="auto"/>
-                    </Grid.RowDefinitions>
-
-
-                    <Border Grid.ColumnSpan="5" Background="#eee" Grid.Row="0">
-                        <TextBlock Text="Degree Receiving Biometric System" FontSize="20" VerticalAlignment="Center" Margin="20,0,0,0" FontWeight="DemiBold" Foreground="#333333"/>
-                    </Border>
-
-
-                    <Grid Grid.Row="1" Grid.ColumnSpan="3" Grid.Column="1" Height="50">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="80"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="15"/>
-                            <RowDefinition Height="2"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4">
-                            <TextBlock Text="Search - (Enter Receipt Number)" FontSize="10" Foreground="#777" Margin="5,0,15,0"/>
-                            <RadioButton x:Name="ChallanNoRadio" Content="CHALLAN_NO" Margin="5,0" GroupName="SearchBy" Foreground="#777" FontSize="10" IsChecked="True"/>
-                            <RadioButton x:Name="CnicNoRadio" Content="CNIC_NO" Margin="5,0" GroupName="SearchBy" Foreground="#777" FontSize="10"/>
-                            <RadioButton x:Name="BookingIdRadio" Content="BOOKING_ID Id" Margin="5,0" GroupName="SearchBy" Foreground="#777" FontSize="10"/>
-                        </StackPanel>
-                        <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
-                            <TextBox BorderThickness="0" x:Name="SearchText" Background="Transparent" VerticalAlignment="Center" Margin="10,0" KeyDown="EnterPress_Handler"/>
-                        </Border>
-                        <Border Grid.Row="2" Grid.Column="2" Background="#eee" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,0" Width="80" Height="32" CornerRadius="8" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                        MouseDown="SearchBtn_Click">
-                            <TextBlock x:Name="SearchBtn" Text="Search" 
-                            Background="Transparent"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </Grid>
-
-                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="3" x:Name="FingerPrinPanel">
-                        <StackPanel>
-                            <TextBlock Text="Recevier Picture" Margin="5,0,0,5" Foreground="#777"/>
-                            <Border Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,5,0,10" Width="120" Height="30" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                        MouseDown="CaptureButton_Click">
-                                <TextBlock x:Name="CaptureImageBtn" Text="Capture" 
-                            Background="Transparent"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-
-                            <Image x:Name="ReceiverPic" Width="200" Height="150"/>
-
-                        </StackPanel>
-                        
-                        <StackPanel Margin="20,0,0,0">
-                            <TextBlock Text="Recevier Fingerprint" Margin="5,0,0,5" Foreground="#777"/>
-                            <Border Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,5,0,5" Width="100" Height="35" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                        MouseDown="CaptureBtn_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock x:Name="CaptureBtn" Text="  Connect" Margin="15,0,0,0" 
-                                    Background="Transparent"
-                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <Border HorizontalAlignment="Center" Width="10" Height="10" Margin="10,0,0,0" CornerRadius="8" Background="#ccc" x:Name="ConnectBubble"/>
-                                </StackPanel>
-                            </Border>
-
-
-                            <TextBlock Grid.Row="1" HorizontalAlignment="Center" Foreground="#ccc" Margin="0,0,0,5" Visibility="Hidden" Name="scanStatus">Sacnning...</TextBlock>
-                            <Border HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1" Grid.Column="1" BorderThickness="0" BorderBrush="#eeeeee" CornerRadius="0">
-                                <Grid>
-                                    <Image Source="/Assests/images/fingerprint-icon.png" Height="180" Width="150" VerticalAlignment="Stretch"/>
-                                    <Image x:Name="FingerprintImage" Height="180" />
-                                </Grid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-
-                    <Border Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Height="200" BorderThickness="1" BorderBrush="#EEEEEE"/>
-
-                    <StackPanel Grid.Row="2" Grid.Column="3">
-                        <Border BorderThickness="1" BorderBrush="#eee">
-                            <Image x:Name="WebcamImage" HorizontalAlignment="Stretch" MaxWidth="300" VerticalAlignment="Top" Height="200"/>
-                        </Border>
-                    </StackPanel>
-
-                    <TextBlock Grid.Column="1" Grid.Row="2" x:Name="ChallanInformation"/>
-
-                    <Grid Grid.Row="4" Grid.Column="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="15"/>
-                            <RowDefinition Height="auto"/>
-                            <RowDefinition Height="15"/>
-                            <RowDefinition Height="auto"/>
-                        </Grid.RowDefinitions>
-
-                        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
-                            <RadioButton Content="Self" GroupName="receiverType" IsChecked="True" x:Name="selfReceived" Checked="SelfRadioBtn_Checked"/>
-                            <RadioButton Content="Authorize Person" GroupName="receiverType" Margin="15,0,0,0" x:Name="authReceived" Checked="AuthRadioBtn_Checked"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="2" x:Name="AuthField1" Visibility="Collapsed">
-                            <TextBlock Text="Auth Person CNIC No" Margin="5,0,0,5" Foreground="#777"/>
-                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
-                                <TextBox BorderThickness="0" x:Name="AuthPersonCNICText" Background="Transparent" VerticalAlignment="Center" Margin="10,0" Height="30"/>
-                            </Border>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="2" x:Name="AuthField2" Visibility="Collapsed">
-                            <TextBlock Text="Auth Person Name" Margin="5,0,0,5" Foreground="#777"/>
-                            <Border Grid.Row="2" Grid.Column="0" CornerRadius="8" BorderThickness="1" BorderBrush="#eee">
-                                <TextBox BorderThickness="0" x:Name="AuthPersonNameText" Background="Transparent" VerticalAlignment="Center" Margin="10,0" Height="30"/>
-                            </Border>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="0" Grid.Row="4" x:Name="AuthField3" Visibility="Collapsed">
-                            <TextBlock Text="NIC Picture" Margin="5,0,0,5" Foreground="#777"/>
-
-                            <Border Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,10" Width="150" Height="35" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                                MouseDown="CaptureAuthCnicButton_Click">
-                                <TextBlock Text="Capture" 
-                                    Background="Transparent"
-                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-
-                            <Image x:Name="AuthNicPic" Width="200" Height="150"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Grid.Row="4" x:Name="AuthField4" Visibility="Collapsed">
-                            <TextBlock Text="Authority Letter" Margin="5,0,0,5" Foreground="#777"/>
-                            <Border Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,10,0,10" Width="150" Height="35" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                                MouseDown="CaptureAuthLetterButton_Click">
-                                <TextBlock Text="Capture" 
-                                    Background="Transparent"
-                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <Image x:Name="AuthLetterPic" Width="200" Height="150"/>
-                        </StackPanel>
-                    </Grid>
-
-
-                    <Border Grid.Row="6" Grid.ColumnSpan="5" Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,10" Width="150" Height="35" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                        MouseDown="CaptureButton_Click">
-                        <TextBlock x:Name="CaptureImageBtns" Text="Save" 
-                            Background="Transparent"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-
-                    <!--fail color #d06a6a-->
-                    <Border x:Name="StatusBlock" VerticalAlignment="Top" HorizontalAlignment="Right" Grid.Row="1" Grid.ColumnSpan="5" Grid.RowSpan="7" Margin="0,0,0,20" BorderThickness="0,0,0,5" 
-                            BorderBrush="#79ba55" Background="#f1f1f1" Padding="15,10" MinWidth="200" Visibility="Collapsed">
-                        <TextBlock Foreground="#777" Text="Error" x:Name="StatusLabel"/>
-                    </Border>
-
-                    <ProgressBar Grid.Row="0" Grid.ColumnSpan="5" Background="#fff" Height="5" x:Name="ProgressBar" IsIndeterminate="True" BorderThickness="0" VerticalAlignment="Top" Foreground="#57b09c" Visibility="Hidden"/>
-                </Grid>
+                <Frame x:Name="PageArea" NavigationUIVisibility="Hidden"/>
             </Border>
         </Grid>
     </Border>
-    </ScrollViewer>
 </Window>

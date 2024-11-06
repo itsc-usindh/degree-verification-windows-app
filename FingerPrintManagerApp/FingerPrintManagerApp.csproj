@@ -10,8 +10,14 @@
 
   <ItemGroup>
     <None Remove="Assests\images\fingerprint-icon.png" />
+    <None Remove="Assests\images\form.png" />
+    <None Remove="Assests\images\list.png" />
     <None Remove="Assests\images\logo.png" />
+    <None Remove="Assests\images\logout.jpg" />
+    <None Remove="form.png" />
+    <None Remove="list.png" />
     <None Remove="logo.png" />
+    <None Remove="logout.jpg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,8 +35,14 @@
 
   <ItemGroup>
     <Resource Include="Assests\images\fingerprint-icon.png" />
+    <Resource Include="Assests\images\form.png" />
+    <Resource Include="Assests\images\list.png" />
     <Resource Include="Assests\images\logo.png" />
+    <Resource Include="Assests\images\logout.jpg" />
+    <Resource Include="form.png" />
+    <Resource Include="list.png" />
     <Resource Include="logo.png" />
+    <Resource Include="logout.jpg" />
   </ItemGroup>
 
 </Project>
