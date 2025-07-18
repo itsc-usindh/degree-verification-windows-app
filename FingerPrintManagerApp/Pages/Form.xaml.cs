@@ -12,6 +12,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Brush = System.Windows.Media.Brush;
+using System.Net.Http;
+using System.Text;
 
 namespace FingerPrintManagerApp.Pages
 {
@@ -23,20 +25,28 @@ namespace FingerPrintManagerApp.Pages
         private SecuBSPMx m_SecuBSP;
         private bool m_DeviceOpened;
         public VideoCaptureDevice videoSource;
+        private ChallanModel queryModel;
         public Form()
         {
             InitializeComponent();
             UserName.Text = UserSession.Instance.CurrentUser.Profile.FirstName + " " + UserSession.Instance.CurrentUser.Profile.LastName;
-            this.Unloaded += Form_Unloaded;
+            //this.Unloaded += Form_Unloaded;
         }
 
         private void Form_Unloaded(object sender, RoutedEventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            try
             {
-                videoSource.SignalToStop();
-                videoSource.NewFrame -= Video_NewFrame;
-            });
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    if (videoSource == null)
+                    {
+                        videoSource.SignalToStop();
+                        videoSource.NewFrame -= Video_NewFrame;
+                    }
+                });
+            }
+            catch (Exception ex) { }
         }
 
         private void ShowStatusBlock(bool isSuccess, string statusMsg)
@@ -117,10 +127,11 @@ namespace FingerPrintManagerApp.Pages
 
                         if (model.BookingDetail == null) throw new Exception("No booking details found");
 
-                        if (model.BookingDetail.CertificateDesc != "DEGREE CERTIFICATE") throw new Exception("Invalid document: "+model.BookingDetail.CertificateDesc);
+                        if (!model.BookingDetail.CertificateDesc.Contains("DEGREE CERTIFICATE")) throw new Exception("Invalid document: "+model.BookingDetail.CertificateDesc);
 
                         if (model.BookingDetail.DeliveryDate > DateTime.Now) throw new Exception("Please wait till: " + model.BookingDetail.DeliveryDate.ToShortDateString());
 
+                        queryModel = model;
                         Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                         {
                             ChallanInformation.Text = "Name:\t\t"+model.ChallanRec.Name  +
@@ -129,6 +140,7 @@ namespace FingerPrintManagerApp.Pages
                                 "\r\nDelivery Date:\t" +model.BookingDetail.DeliveryDate.ToLongDateString() +
                                 "\r\nBooking Date:\t" +model.BookingDetail.BookingDate.ToLongDateString() +
                                 "\r\nSeat No:\t\t" +model.BookingDetail.SeatNo +
+                                "\r\nYear:\t\t" +model.ChallanRec.ExamYear +
                                 "\r\nProgram:\t" +model.BookingDetail.ProgramTitle;
                         }));
                         ConnectDevices();
@@ -155,8 +167,12 @@ namespace FingerPrintManagerApp.Pages
         #region Fingerprint Code
         private void InitializeFingerprintDevice()
         {
-            m_SecuBSP = new SecuBSPMx();
-            m_DeviceOpened = false;
+            try
+            {
+                m_SecuBSP = new SecuBSPMx();
+                m_DeviceOpened = false;
+            }
+            catch { }
         }
         private async void CaptureBtn_Click(object sender, RoutedEventArgs e)
         {
@@ -318,7 +334,127 @@ namespace FingerPrintManagerApp.Pages
                 return bitmapImage;
             }
         }
+        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SearchText.Text.Length == 0)
+            {
+                ShowStatusBlock(false, "Enter a search value.");
+                return;
+            }
 
+            if (ReceiverPic.Source == null && ReceiverCnicPic.Source == null && FingerprintImage.Source == null)
+            {
+                ShowStatusBlock(false, "Fill required fields!");
+                return;
+            }
+
+            try
+            {
+                // Convert all image sources to Base64 strings or null
+                string rightThumb = ImageSourceToBase64(AuthNicPic.Source);
+                string rightIndex = ImageSourceToBase64(AuthLetterPic.Source);
+                string rightMiddle = ImageSourceToBase64(ReceiverPic.Source);
+                string leftThumb = ImageSourceToBase64(ReceiverCnicPic.Source);
+                string leftIndex = ImageSourceToBase64(WebcamImage.Source);
+                string leftMiddle = ImageSourceToBase64(FingerprintImage.Source);
+
+                var payload = new
+                {
+                    QUERY_TYPE = "UPDATE",
+                    NAME = queryModel.ChallanRec.Name,
+                    FNAME = queryModel.ChallanRec.Fname,
+                    CNIC_NO = queryModel.ChallanRec.CnicNo,
+                    CNIC_ISSUE_DATE = queryModel.ChallanRec.Date, // Static or fetch from data source
+                    ADDRESS = queryModel.ChallanRec.ChallanId,
+                    RIGHT_THUMB = rightThumb,
+                    RIGHT_INDEX = rightIndex,
+                    RIGHT_MIDDLE = rightMiddle,
+                    LEFT_THUMB = leftThumb,
+                    LEFT_INDEX = leftIndex,
+                    LEFT_MIDDLE = leftMiddle,
+                    RECORD_DATE = DateTime.Now.ToString("dd-MM-yyyy")
+                };
+
+                string jsonData = JsonConvert.SerializeObject(payload);
+
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await client.PostAsync("https://itsc.usindh.edu.pk/sac/api/biometric_profile", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        ShowStatusBlock(true, "Data and biometrics uploaded successfully!");
+                    }
+                    else
+                    {
+                        ShowStatusBlock(false, "Failed to upload biometric data: " + response.StatusCode);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatusBlock(false, "Error: " + ex.Message);
+            }
+            finally
+            {
+                // Reset form
+                ChallanInformation.Text = "";
+                SearchText.Text = "";
+
+                AuthNicPic.Source = null;
+                AuthLetterPic.Source = null;
+                ReceiverPic.Source = null;
+                ReceiverCnicPic.Source = null;
+                WebcamImage.Source = null;
+                FingerprintImage.Source = null;
+
+                if (videoSource != null && videoSource.IsRunning)
+                {
+                    videoSource.SignalToStop();
+                }
+            }
+        }
+        private string ImageSourceToBase64(ImageSource imageSource)
+        {
+            if (imageSource == null) return null;
+
+            var bitmapSource = imageSource as BitmapSource;
+            if (bitmapSource == null) return null;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BitmapEncoder encoder = new PngBitmapEncoder(); // Use PNG or JPEG
+                encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+                encoder.Save(ms);
+                return Convert.ToBase64String(ms.ToArray());
+            }
+        }
+
+        //private void SaveButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (SearchText.Text.Length == 0) return;
+
+        //    if (ReceiverPic.Source == null && ReceiverCnicPic.Source == null && FingerprintImage.Source == null)
+        //    {
+        //        ShowStatusBlock(false, "Fill required fields!");
+        //        return;
+        //    }
+
+        //    ShowStatusBlock(true, "Data is saved successfully!");
+        //    ChallanInformation.Text = "";
+        //    SearchText.Text = "";
+
+        //    AuthNicPic.Source = null;
+        //    AuthLetterPic.Source =  null;
+        //    ReceiverPic.Source =  null;
+        //    ReceiverCnicPic.Source = null;
+        //    WebcamImage.Source = null;
+        //    FingerprintImage.Source = null;
+        //    videoSource.SignalToStop();
+
+        //}
         private void CaptureButton_Click(object sender, RoutedEventArgs e)
         {
             if (WebcamImage.Source != null)
@@ -327,6 +463,17 @@ namespace FingerPrintManagerApp.Pages
                 byte[] imageBytes = SaveImageAsBytes();
 
                 StoreImageInDatabase(imageBytes, "REVEIVER_PHOTO");
+                ShowStatusBlock(true, "Image Captured!");
+            }
+        }
+        private void CaptureCnicButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (WebcamImage.Source != null)
+            {
+                //SaveImage((BitmapImage)WebcamImage.Source);
+                byte[] imageBytes = SaveImageAsBytes();
+
+                StoreImageInDatabase(imageBytes, "REVEIVER_CNIC_PHOTO");
                 ShowStatusBlock(true, "Image Captured!");
             }
         }
@@ -386,6 +533,7 @@ namespace FingerPrintManagerApp.Pages
             if (imageFor == "AUTH_CNIC_PIC") AuthNicPic.Source = WebcamImage.Source.Clone();
             else if (imageFor == "AUTH_LATTER_PIC") AuthLetterPic.Source = WebcamImage.Source.Clone();
             else if (imageFor == "REVEIVER_PHOTO") ReceiverPic.Source = WebcamImage.Source.Clone();
+            else if (imageFor == "REVEIVER_CNIC_PHOTO") ReceiverCnicPic.Source = WebcamImage.Source.Clone();
             // Example method to store image bytes in the database
             // You will need to adjust the connection string and the table/column names
         }

@@ -11,8 +11,8 @@ namespace FingerPrintManagerApp.Service
 
         public static string PostWebRequest(string url, string jsonPayload)
         {
-            try
-            {
+            //try
+            //{
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
                 request.ContentType = "application/json";
@@ -32,11 +32,11 @@ namespace FingerPrintManagerApp.Service
                     string result = streamReader.ReadToEnd();
                     return result;
                 }
-            }
-            catch (WebException ex)
-            {
-                throw new Exception($"WebRequest error: {ex.Message}");
-            }
+            //}
+            //catch (WebException ex)
+            //{
+            //    throw new Exception($"WebRequest error: {ex.Message}");
+            //}
         }
         #endregion
     }

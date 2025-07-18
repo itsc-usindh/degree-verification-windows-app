@@ -10,7 +10,7 @@
 
     <Grid>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
 
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -89,7 +89,18 @@
                         </Border>
 
                         <Image x:Name="ReceiverPic" Width="200" Height="150"/>
+                    </StackPanel>
 
+                    <StackPanel Margin="5,0,0,0">
+                        <TextBlock Text="Candidate CNIC Picture" Margin="5,0,0,5" Foreground="#777"/>
+                        <Border Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="0,5,0,10" Width="120" Height="30" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
+                        MouseDown="CaptureCnicButton_Click">
+                            <TextBlock x:Name="CaptureCnicImageBtn" Text="Capture" 
+                            Background="Transparent"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <Image x:Name="ReceiverCnicPic" Width="200" Height="150"/>
                     </StackPanel>
 
                     <StackPanel Margin="20,0,0,0">
@@ -186,7 +197,7 @@
 
 
                 <Border Grid.Row="6" Grid.ColumnSpan="5" Background="#eee" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,10,0,10" Width="150" Height="35" CornerRadius="10" BorderThickness="1" BorderBrush="#ccc" Cursor="Hand"
-                        MouseDown="CaptureButton_Click">
+                        MouseDown="SaveButton_Click">
                     <TextBlock x:Name="CaptureImageBtns" Text="Save" 
                             Background="Transparent"
                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
