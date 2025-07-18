@@ -350,7 +350,7 @@ namespace FingerPrintManagerApp.Pages
 
             try
             {
-                // Convert all image sources to Base64 strings or null
+                // Convert image sources to base64 (for biometric API)
                 string rightThumb = ImageSourceToBase64(AuthNicPic.Source);
                 string rightIndex = ImageSourceToBase64(AuthLetterPic.Source);
                 string rightMiddle = ImageSourceToBase64(ReceiverPic.Source);
@@ -358,7 +358,13 @@ namespace FingerPrintManagerApp.Pages
                 string leftIndex = ImageSourceToBase64(WebcamImage.Source);
                 string leftMiddle = ImageSourceToBase64(FingerprintImage.Source);
 
-                var payload = new
+                // Get user info
+                var user = UserSession.Instance.CurrentUser.Profile;
+
+                // ---------------------
+                // 1️⃣ Call biometric API
+                // ---------------------
+                var biometricPayload = new
                 {
                     QUERY_TYPE = "UPDATE",
                     NAME = queryModel.ChallanRec.Name,
@@ -375,23 +381,40 @@ namespace FingerPrintManagerApp.Pages
                     RECORD_DATE = DateTime.Now.ToString("dd-MM-yyyy")
                 };
 
-                string jsonData = JsonConvert.SerializeObject(payload);
+                // ---------------------
+                // 2️nd Call challan upload API
+                // ---------------------
+                var challanUploadPayload = new
+                {
+                    CHALLAN_NO = SearchText.Text,
+                    STATUS_ID = "1", // Adjust as needed
+                    STATUS_DATE = DateTime.Now.ToString("yyyy-MM-dd"),
+                    CERT_NO = "DEGREE-CERT-001", // Replace with actual cert number if available
+                    RECEIVER_NAME = (AuthPersonNameText.Text),
+                    RECEIVER_CNIC_NO = AuthPersonCNICText,
+                    DELIVERED_BY = UserName.Text ?? "SYSTEM_USER" // Or fetch from session
+                };
 
                 using (var client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                    var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-                    HttpResponseMessage response = await client.PostAsync("https://itsc.usindh.edu.pk/sac/api/biometric_profile", content);
+                    // Send biometric data
+                    var biometricContent = new StringContent(JsonConvert.SerializeObject(biometricPayload), Encoding.UTF8, "application/json");
+                    var bioResponse = await client.PostAsync("https://itsc.usindh.edu.pk/sac/api/biometric_profile", biometricContent);
 
-                    if (response.IsSuccessStatusCode)
+                    // Send challan delivery info
+                    var challanContent = new StringContent(JsonConvert.SerializeObject(challanUploadPayload), Encoding.UTF8, "application/json");
+                    var challanResponse = await client.PostAsync("https://annual.usindh.edu.pk/api/enquiry/uploadChallan", challanContent);
+
+                    if (bioResponse.IsSuccessStatusCode && challanResponse.IsSuccessStatusCode)
                     {
-                        ShowStatusBlock(true, "Data and biometrics uploaded successfully!");
+                        ShowStatusBlock(true, "Data and delivery info uploaded successfully!");
                     }
                     else
                     {
-                        ShowStatusBlock(false, "Failed to upload biometric data: " + response.StatusCode);
+                        ShowStatusBlock(false, "One or more API calls failed.");
                     }
                 }
+
             }
             catch (Exception ex)
             {
